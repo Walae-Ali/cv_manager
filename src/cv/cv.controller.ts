@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { CvService } from './cv.service';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
+import { FilterCvDto } from './dto/filter-cv.dto';
 
 @Controller('cv')
 export class CvController {
@@ -9,12 +10,12 @@ export class CvController {
 
   @Post()
   create(@Body() createCvDto: CreateCvDto) {
-    return this.cvService.create(createCvDto);
+    return this.cvService.createCv(createCvDto);
   }
 
   @Get()
-  findAll() {
-    return this.cvService.findAll();
+  findAllCvs(@Query() filterDto?:FilterCvDto) {
+    return this.cvService.findAllCvs(filterDto);
   }
 
   @Get(':id')
@@ -24,7 +25,7 @@ export class CvController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCvDto: UpdateCvDto) {
-    return this.cvService.update(+id, updateCvDto);
+    return this.cvService.updateCv(+id, updateCvDto);
   }
 
   @Delete(':id')

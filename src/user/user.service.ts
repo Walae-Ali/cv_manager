@@ -4,10 +4,10 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import { BaseService } from 'src/common/services/crud.service';
+import { GenericCrud } from 'src/common/services/crud.service';
 
 @Injectable()
-export class UserService extends BaseService<User> {
+export class UserService extends GenericCrud<User> {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -23,26 +23,14 @@ export class UserService extends BaseService<User> {
       throw new Error('User with this email already exists');
     }
 
-    // Create a new User instance
-    const newUser = this.userRepository.create(createUserDto);
+    return await super.create(createUserDto);
 
-    // Save the user to the database
-    return await this.userRepository.save(newUser);
   }
 
   // Update user
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-    // Find the existing user
-    const existingUser = await this.userRepository.findOneBy({ id });
-    if (!existingUser) {
-      throw new Error('User not found');
-    }
-
-    // Merge the updated data into the existing user
-    const updatedUser = this.userRepository.merge(existingUser, updateUserDto);
-
-    // Save the updated user
-    return await this.userRepository.save(updatedUser);
+    return await super.update(id, updateUserDto);
+  
   }
  
 }

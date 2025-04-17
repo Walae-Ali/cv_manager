@@ -1,15 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
 import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cv } from './entities/cv.entity';
-import { BaseService } from 'src/common/services/crud.service';
+import { GenericCrud } from 'src/common/services/crud.service';
 import { Skill } from 'src/skill/entities/skill.entity';
 import { User } from 'src/user/entities/user.entity';
+import { FilterCvDto } from './dto/filter-cv.dto';
 
 @Injectable()
-export class CvService extends BaseService<Cv> {
+export class CvService extends GenericCrud<Cv> {
   constructor(
    @InjectRepository(Cv)
    private readonly cvRepo:Repository<Cv>, 
@@ -21,7 +22,8 @@ export class CvService extends BaseService<Cv> {
   ){
     super(cvRepo);
   }
-  async create(createCvDto: CreateCvDto): Promise<Cv> {
+  //this method takes the user id from the dto
+  async createCv(createCvDto: CreateCvDto): Promise<Cv> {
     const { skills, userId, ...cvData } = createCvDto;
   
     // 1. Find Skill entities from IDs
@@ -31,40 +33,95 @@ export class CvService extends BaseService<Cv> {
     const userEntity = userId ? await this.userRepository.findOneBy({ id: userId }) : null;
   
     // 3. Create CV with resolved relations
-    const newCv = this.cvRepo.create({
+    const newCv = super.create({
       ...cvData,
       skills: skillEntities,
       user: userEntity,
     });
   
-    return this.cvRepo.save(newCv);
+    return  newCv;
+  }
+  //this method takes the user id from params
+  async createCvForUser(createCvDto: CreateCvDto, userId: number): Promise<Cv> {
+    const { skills, ...cvData } = createCvDto;
+  
+    // 1. Vérifie que l'utilisateur existe
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException(`Utilisateur avec ID ${userId} introuvable`);
+    }
+  
+    // 2. Récupère les entités de compétences si présentes
+    const skillEntities = skills?.length
+      ? await this.skillRepository.findBy({ id: In(skills) })
+      : [];
+  
+    // 3. Crée et enregistre le CV
+    const newCv = this.cvRepo.create({
+      ...cvData,
+      user,
+      skills: skillEntities,
+    });
+  
+    return await this.cvRepo.save(newCv);
   }
   
+  
 
-  async update(id: number, updateCvDto: UpdateCvDto): Promise<Cv> {
+  async updateCv(id: number, updateCvDto: UpdateCvDto): Promise<Cv> {
     const { skills, userId, ...cvData } = updateCvDto;
   
-    // 1. Find the existing Cv entity by ID
-    const existingCv = await this.cvRepo.findOne({ where: { id }, relations: ['skills', 'user'] });
+    const existingCv = await this.cvRepo.findOne({
+      where: { id },
+      relations: ['skills', 'user'],
+    });
   
     if (!existingCv) {
       throw new Error('Cv not found');
     }
   
-    // 2. Resolve Skill entities from IDs if provided
-    const skillEntities = skills && skills.length? await this.skillRepository.findBy({ id: In(skills) }): existingCv.skills;  // Use the existing skills if no new ones are provided
+    const skillEntities = skills && skills.length
+      ? await this.skillRepository.findBy({ id: In(skills) })
+      : existingCv.skills;
   
-    // 3. Find the User entity if a userId is provided
-    const userEntity = userId ? await this.userRepository.findOneBy({ id: userId }) : existingCv.user;  // Use the existing user if no new one is provided
+    const userEntity = userId
+      ? await this.userRepository.findOneBy({ id: userId })
+      : existingCv.user;
   
-    // 4. Update the existing Cv with the new data
-    const updatedCv = this.cvRepo.merge(existingCv, cvData, {
+    return super.update(id, {
+      ...cvData,
       skills: skillEntities,
       user: userEntity,
     });
+  }
   
-    // 5. Save and return the updated Cv entity
-    return this.cvRepo.save(updatedCv);
+
+  async findAllCvs(filterDto?: FilterCvDto): Promise<Cv[]> {
+    const { critere, age } = filterDto || {};
+  
+    const query = this.cvRepo.createQueryBuilder('cv')
+      .leftJoinAndSelect('cv.user', 'user')
+      .leftJoinAndSelect('cv.skills', 'skills');
+  
+    if (critere) {
+      query.andWhere(
+        'cv.name LIKE :critere OR cv.firstname LIKE :critere OR cv.job LIKE :critere',
+        { critere: `%${critere}%` },
+      );
+    }
+  
+    if (age !== undefined) {
+      query.andWhere('cv.age = :age', { age });
+    }
+  
+    return await query.getMany();
+  }
+  
+  async findByUser(userId: number): Promise<Cv[]> {
+    return this.cvRepo.find({
+      where: { user: { id: userId } },
+      relations: ['user', 'skills'],
+    });
   }
   
 
