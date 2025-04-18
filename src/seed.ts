@@ -37,10 +37,11 @@ async function bootstrap() {
   const cvRepo = dataSource.getRepository(Cv);
 
   for (let i = 0; i < 5; i++) {
+    const password=randPassword()
     const user = userRepo.create({
         username: randUserName(),
         email: randEmail(),
-        password: randPassword[0],
+        password: randPassword()[0]
     });
 
     await userRepo.save(user);
