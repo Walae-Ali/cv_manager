@@ -1,5 +1,6 @@
 import { DeepPartial, FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PaginationDto } from '../dto/pagination.dto';
 
 @Injectable()
 export class GenericCrud<T> {
@@ -9,13 +10,29 @@ export class GenericCrud<T> {
     return await this.repository.save(entity);
   }
   /**
-   * Récupère toutes les entités avec filtrage optionnel
+   * Récupère toutes les entités avec pagination et filtrage optionnel
    * @param options Options de recherche
-   * @returns Liste des entités
+   * @param page Numéro de page (commence à 1)
+   * @param limit Nombre d'éléments par page
+   * @returns Objet contenant les entités et les métadonnées de pagination
    */
-  async findAll(options?: FindManyOptions<T>): Promise<T[]> {
-    return await this.repository.find(options);
+  async findAll(options?: FindManyOptions<T>, 
+    paginationDto?: PaginationDto): Promise<{ items: T[],page: number, limit: number }> {
+    const page = paginationDto?.page || 1;
+    const limit = paginationDto?.limit || 10;
+    const [items, total] = await this.repository.findAndCount({
+      ...options,
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+    
+    return {
+      items,
+      page,
+      limit
+    };
   }
+
  
 
   async findOne(id: number | string, options?: FindOneOptions<T>): Promise<T> {

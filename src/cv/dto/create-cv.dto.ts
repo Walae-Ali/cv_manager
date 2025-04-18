@@ -17,10 +17,6 @@ export class CreateCvDto {
   job: string;
 
   @IsOptional()
-  @IsString()
-  path?: string;
-
-  @IsOptional()
   skills?: number[]; // IDs of related skills
 
   @IsOptional()

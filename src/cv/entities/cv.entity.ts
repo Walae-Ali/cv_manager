@@ -23,6 +23,9 @@ export class Cv {
   @Column()
   job: string;
 
+  @Column({ nullable: true })
+  image: string;
+
   @Column()
   path: string;
 

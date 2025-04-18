@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { SkillService } from './skill.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('skill')
 export class SkillController {
@@ -13,8 +14,8 @@ export class SkillController {
   }
 
   @Get()
-  findAll() {
-    return this.skillService.findAll();
+  findAll(@Body() paginationDto: PaginationDto) {
+    return this.skillService.findAll({},paginationDto);
   }
 
   @Get(':id')

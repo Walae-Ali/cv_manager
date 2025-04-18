@@ -4,7 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import { GenericCrud } from 'src/common/services/crud.service';
+import { GenericCrud } from '../common/services/crud.service';
 
 @Injectable()
 export class UserService extends GenericCrud<User> {

@@ -4,7 +4,7 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Skill } from './entities/skill.entity';
 import { Repository } from 'typeorm';
-import { GenericCrud } from 'src/common/services/crud.service';
+import { GenericCrud } from '../common/services/crud.service';
 
 @Injectable()
 export class SkillService extends GenericCrud<Skill> {

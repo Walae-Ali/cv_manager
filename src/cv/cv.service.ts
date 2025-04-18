@@ -4,10 +4,12 @@ import { UpdateCvDto } from './dto/update-cv.dto';
 import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cv } from './entities/cv.entity';
-import { GenericCrud } from 'src/common/services/crud.service';
-import { Skill } from 'src/skill/entities/skill.entity';
-import { User } from 'src/user/entities/user.entity';
+import { GenericCrud } from '../common/services/crud.service';
+import { Skill } from '../skill/entities/skill.entity';
+import { User } from '../user/entities/user.entity';
 import { FilterCvDto } from './dto/filter-cv.dto';
+import { unlinkSync } from 'fs';
+import { join } from 'path';
 
 @Injectable()
 export class CvService extends GenericCrud<Cv> {
@@ -123,7 +125,22 @@ export class CvService extends GenericCrud<Cv> {
       relations: ['user', 'skills'],
     });
   }
-  
+
+  async uploadCvImage(cvId: number, filename: string): Promise<Cv> {
+    const cv = await this.cvRepo.findOneBy({ id: cvId });
+    if (!cv) {
+      throw new NotFoundException(`CV avec ID ${cvId} introuvable`);
+    }
+
+
+    // Mettre à jour le chemin de l'image
+    cv.image = `public/uploads/${filename}`;
+    return this.cvRepo.save(cv);
+  }
+  async getImage(imagePath: string): Promise<any> {
+    const fullPath = join(process.cwd(), 'public', imagePath);
+    return { path: fullPath };
+  }
 
  
 }
