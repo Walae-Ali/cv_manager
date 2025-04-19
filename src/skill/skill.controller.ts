@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { SkillService } from './skill.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
-
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+@UseGuards(JwtAuthGuard)
 @Controller('skill')
+
 export class SkillController {
   constructor(private readonly skillService: SkillService) {}
 

@@ -1,11 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, ParseIntPipe, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, ParseIntPipe, UploadedFile, BadRequestException, UseGuards } from '@nestjs/common';
 import { CvService } from './cv.service';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
 import { FilterCvDto } from './dto/filter-cv.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from 'src/Auth/guards/jwt-auth.guard';
 
 @Controller('cv')
+@UseGuards(JwtAuthGuard)
 export class CvController {
   constructor(private readonly cvService: CvService) {}
 
