@@ -7,11 +7,14 @@ import { Skill } from '../skill/entities/skill.entity';
 import { User } from '../user/entities/user.entity';
 import { CvV2Controller } from './cv-v2.controller';
 import { ImageStorageModule } from '../common/imageStorage.module';
+import { AuthModule } from '../auth/auth.module';
+
 
 @Module({
   imports: [TypeOrmModule.forFeature([Cv,Skill,User]),
-  ImageStorageModule],
+  ImageStorageModule,AuthModule],
   controllers: [CvController,CvV2Controller],
   providers: [CvService],
 })
-export class CvModule {}
+export class CvModule {
+}

@@ -38,9 +38,10 @@ async function bootstrap() {
 
   for (let i = 0; i < 5; i++) {
     const user = userRepo.create({
-        username: randUserName(),
-        email: randEmail(),
-        password: randPassword[0],
+      username: randUserName(),
+      email: randEmail(),
+      password: randPassword()[0],
+      role: 'user', // ✅ Add default role here
     });
 
     await userRepo.save(user);
@@ -54,8 +55,8 @@ async function bootstrap() {
         job: randJobTitle(),
         path: randUrl(),
         user: user,
-        skills: rand(skills,{length: Math.floor(Math.random() * 3) + 1, })
-      })
+        skills: rand(skills, { length: Math.floor(Math.random() * 3) + 1 }),
+      });
       await cvRepo.save(cv);
     }
   }
@@ -63,4 +64,5 @@ async function bootstrap() {
   console.log('✅ Base de données seedée avec succès !');
   await app.close();
 }
+
 bootstrap();
