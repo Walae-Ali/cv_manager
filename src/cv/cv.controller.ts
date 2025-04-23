@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, ParseIntPipe, UploadedFile, BadRequestException, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, ParseIntPipe, UploadedFile, BadRequestException, UseGuards, Req, ForbiddenException } from '@nestjs/common';
 import { CvService } from './cv.service';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
 import { FilterCvDto } from './dto/filter-cv.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/Auth/guards/jwt-auth.guard';
+import { GetUser } from 'src/Auth/decorators/get-user.decorator';
+import { AdminGuard } from 'src/Auth/guards/admin.guard';
 
 @Controller('cv')
 @UseGuards(JwtAuthGuard)
@@ -15,26 +17,51 @@ export class CvController {
   create(@Body() createCvDto: CreateCvDto) {
     return this.cvService.createCv(createCvDto);
   }
-
+ @UseGuards(AdminGuard)
   @Get()
-  findAllCvs(@Query() filterDto?:FilterCvDto) {
+  findAllCvs( @GetUser('userId') userId: number,@Query() filterDto?:FilterCvDto) {
+
     return this.cvService.findAllCvs(filterDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+ async findOne(@Param('id') id: string,     @GetUser('userId') userId: number
+) {
+  const cv = await this.cvService.findOne(+id);
+
+  if (!cv || cv.user.id !== userId) {
+    throw new ForbiddenException('You are not allowed to update this CV');
+  }
     return this.cvService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCvDto: UpdateCvDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateCvDto: UpdateCvDto,
+    @GetUser('userId') userId: number
+  ) {
+    const cv = await this.cvService.findOne(+id);
+  
+    if (!cv || cv.user.id !== userId) {
+      throw new ForbiddenException('You are not allowed to update this CV');
+    }
+  
     return this.cvService.updateCv(+id, updateCvDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+ async remove(@Param('id') id: string  ,  @GetUser('userId') userId: number
+) {
+  const cv = await this.cvService.findOne(+id);
+
+  if (!cv || cv.user.id !== userId) {
+    throw new ForbiddenException('You are not allowed to update this CV');
+  }
     return this.cvService.remove(+id);
   }
+
+
   @Post(':id/image')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(

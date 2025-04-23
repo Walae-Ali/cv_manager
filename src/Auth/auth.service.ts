@@ -50,6 +50,8 @@ export class AuthService extends GenericCrud<User> {
   async validateUser(username: string, password: string): Promise<User | null> {
     const user = await this.userRepository.findOne({ where: { username } });
     if (user && (await bcrypt.compare(password, user.password))) {
+      console.log("******************************");
+      console.log(user);
       return user;
     }
     return null;
@@ -62,6 +64,7 @@ export class AuthService extends GenericCrud<User> {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    console.log('🚨 JWT_SECRET used:', process.env.JWT_SECRET);
 
     const payload = { username: user.username, sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload); 
